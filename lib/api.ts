@@ -15,6 +15,8 @@ async function fetchGraphQL<TResult, TVariables>(
   variables: TVariables,
   preview = false,
 ): Promise<TResult> {
+  console.log('fetchGraphQL preview', preview)
+  console.log('CONTENTFUL_ACCESS_TOKEN', process.env.CONTENTFUL_ACCESS_TOKEN)
   const accessToken = preview
     ? process.env.CONTENTFUL_PREVIEW_ACCESS_TOKEN
     : process.env.CONTENTFUL_ACCESS_TOKEN;
@@ -67,6 +69,7 @@ export async function getAllArticles(limit = 3, isDraftMode = false) {
 }
 
 export async function getArticle(slug: string, isDraftMode = false) {
+  console.log('getArticle', slug, isDraftMode);
   const data = await fetchGraphQL(
     GetArticleDocument,
     { slug, preview: isDraftMode },

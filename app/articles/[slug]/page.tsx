@@ -2,6 +2,7 @@ import { getAllArticles, getArticle } from "@/lib/api";
 import { documentToReactComponents } from "@contentful/rich-text-react-renderer";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { draftMode } from "next/headers";
 
 export async function generateStaticParams() {
   const allArticles = await getAllArticles();
@@ -17,7 +18,8 @@ export default async function KnowledgeArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const article = await getArticle(slug);
+  const draft = await draftMode();
+  const article = await getArticle(slug, draft.isEnabled);
 
   if (!article) {
     notFound();
@@ -41,6 +43,7 @@ export default async function KnowledgeArticlePage({
                 alt={article.articleImage.description ?? "Article image"}
                 className="aspect-video w-full overflow-hidden rounded-xl object-cover"
                 height="365"
+                loading="eager"
                 src={article.articleImage.url}
                 width="650"
               />
