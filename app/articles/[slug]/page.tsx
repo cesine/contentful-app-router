@@ -13,6 +13,8 @@ export async function generateStaticParams() {
 
 export default async function KnowledgeArticlePage({
   params,
+}: {
+  params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
   const article = await getArticle(slug);
@@ -34,17 +36,21 @@ export default async function KnowledgeArticlePage({
             </p>
           </div>
           <div className="space-y-8 lg:space-y-10">
-            <Image
-              alt="Article Image"
-              className="aspect-video w-full overflow-hidden rounded-xl object-cover"
-              height="365"
-              src={article.articleImage.url}
-              width="650"
-            />
+            {article.articleImage?.url ? (
+              <Image
+                alt={article.articleImage.description ?? "Article image"}
+                className="aspect-video w-full overflow-hidden rounded-xl object-cover"
+                height="365"
+                src={article.articleImage.url}
+                width="650"
+              />
+            ) : null}
             <div className="space-y-4 md:space-y-6">
               <div className="space-y-2">
                 <div className="max-w-[900px] text-zinc-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-zinc-400">
-                  {documentToReactComponents(article.details.json)}
+                  {article.details?.json
+                    ? documentToReactComponents(article.details.json)
+                    : null}
                 </div>
               </div>
             </div>

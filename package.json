@@ -6,11 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "gen:types": "cf-content-types-generator -s $CONTENTFUL_SPACE_ID -t $CONTENTFUL_ACCESS_TOKEN -o ./lib/types/generated",
+    "graphql:codegen": "graphql-codegen --config codegen.ts",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "@contentful/rich-text-react-renderer": "^16.2.2",
+    "@contentful/rich-text-types": "^17.2.7",
+    "graphql": "^16.11.0",
     "next": "16.3.6",
     "react": "19.2.8",
     "react-dom": "19.2.8"
@@ -21,8 +24,14 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "cf-content-types-generator": "^3.0.1",
+    "@graphql-codegen/cli": "^6.0.0",
+    "@graphql-codegen/typed-document-node": "^6.0.0",
+    "@graphql-codegen/typescript": "^5.0.0",
+    "@graphql-codegen/typescript-operations": "^5.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "dotenv": "^16.6.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

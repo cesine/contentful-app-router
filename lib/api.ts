@@ -1,100 +1,81 @@
-// Set a variable that contains all the fields needed for articles when a fetch for
-// content is performed
-const ARTICLE_GRAPHQL_FIELDS = `
-  sys {
-    id
-  }
-  title
-  slug
-  summary
-  details {
-    json
-    links {
-      assets {
-        block {
-          sys {
-            id
-          }
-          url
-          description
-        }
-      }
-    }
-  }
-  date
-  authorName
-  categoryName
-  articleImage {
-    url
-  }
-`;
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import { print } from "graphql";
+import {
+  GetArticleDocument,
+  GetArticlesDocument,
+} from "@/lib/types/graphql.generated";
 
-async function fetchGraphQL(query, preview = false) {
-  console.log('CONTENTFUL_ACCESS_TOKEN', process.env.CONTENTFUL_ACCESS_TOKEN)
-  return fetch(
-    `https://graphql.contentful.com/content/v1/spaces/${process.env.CONTENTFUL_SPACE_ID}`,
+type GraphQLResponse<TResult> = {
+  data?: TResult;
+  errors?: Array<{ message: string }>;
+};
+
+async function fetchGraphQL<TResult, TVariables>(
+  document: TypedDocumentNode<TResult, TVariables>,
+  variables: TVariables,
+  preview = false,
+): Promise<TResult> {
+  const accessToken = preview
+    ? process.env.CONTENTFUL_PREVIEW_ACCESS_TOKEN
+    : process.env.CONTENTFUL_ACCESS_TOKEN;
+  const spaceId = process.env.CONTENTFUL_SPACE_ID;
+
+  if (!spaceId || !accessToken) {
+    throw new Error("Contentful GraphQL environment variables are not configured.");
+  }
+
+  const response = await fetch(
+    `https://graphql.contentful.com/content/v1/spaces/${spaceId}`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // Switch the Bearer token depending on whether the fetch is supposed to retrieve live
-        // Contentful content or draft content
-        Authorization: `Bearer ${
-          preview
-            ? process.env.CONTENTFUL_PREVIEW_ACCESS_TOKEN
-            : process.env.CONTENTFUL_ACCESS_TOKEN
-        }`,
+        Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ query }),
-      // Associate all fetches for articles with an "articles" cache tag so content can
-      // be revalidated or updated from Contentful on publish
+      body: JSON.stringify({ query: print(document), variables }),
       next: { tags: ["articles"] },
     },
-  ).then(async (response) => {
-    const data = await response.json();
-    console.log('data', data)
-    return data;
-});
+  );
+
+  const result = (await response.json()) as GraphQLResponse<TResult>;
+
+  if (!response.ok || result.errors?.length) {
+    const errorMessage = result.errors?.map((error) => error.message).join("; ");
+    throw new Error(errorMessage || `Contentful request failed (${response.status}).`);
+  }
+
+  if (!result.data) {
+    throw new Error("Contentful GraphQL response did not include data.");
+  }
+
+  return result.data;
 }
 
-function extractArticleEntries(fetchResponse) {
-  return fetchResponse?.data?.knowledgeArticleCollection?.items;
-}
-
-export async function getAllArticles(
-  // For this demo set the default limit to always return 3 articles.
-  limit = 3,
-  // By default this function will return published content but will provide an option to
-  // return draft content for reviewing articles before they are live
-  isDraftMode = false,
-) {
-  const articles = await fetchGraphQL(
-    `query {
-        knowledgeArticleCollection(where:{slug_exists: true}, order: date_DESC, limit: ${limit}, preview: ${
-          isDraftMode ? "true" : "false"
-        }) {
-          items {
-            ${ARTICLE_GRAPHQL_FIELDS}
-          }
-        }
-      }`,
+export async function getAllArticles(limit = 3, isDraftMode = false) {
+  const data = await fetchGraphQL(
+    GetArticlesDocument,
+    { limit, preview: isDraftMode },
     isDraftMode,
   );
-  return extractArticleEntries(articles);
+
+  const items = data.knowledgeArticleCollection?.items ?? [];
+
+  return items.filter(
+    (article): article is NonNullable<typeof article> & { slug: string } =>
+      article !== null && typeof article.slug === "string" && article.slug.length > 0,
+  );
 }
 
-export async function getArticle(slug, isDraftMode = false) {
-  const article = await fetchGraphQL(
-    `query {
-        knowledgeArticleCollection(where:{slug: "${slug}"}, limit: 1, preview: ${
-          isDraftMode ? "true" : "false"
-        }) {
-          items {
-            ${ARTICLE_GRAPHQL_FIELDS}
-          }
-        }
-      }`,
+export async function getArticle(slug: string, isDraftMode = false) {
+  const data = await fetchGraphQL(
+    GetArticleDocument,
+    { slug, preview: isDraftMode },
     isDraftMode,
   );
-  return extractArticleEntries(article)[0];
+
+  return (
+    data.knowledgeArticleCollection?.items?.find(
+      (article) => article !== null,
+    ) ?? null
+  );
 }

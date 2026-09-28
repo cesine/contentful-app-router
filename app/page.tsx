@@ -24,13 +24,15 @@ export default async function Home() {
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {articles.map((article) => (
                   <article key={article.sys.id} className="h-full flex flex-col rounded-lg shadow-lg overflow-hidden">
-                    <Image
-                      alt="placeholder"
-                      className="aspect-[4/3] object-cover w-full"
-                      height="263"
-                      src={article.articleImage.url}
-                      width="350"
-                    />
+                    {article.articleImage?.url ? (
+                      <Image
+                        alt={article.articleImage.description ?? "Article image"}
+                        className="aspect-[4/3] object-cover w-full"
+                        height="263"
+                        src={article.articleImage.url}
+                        width="350"
+                      />
+                    ) : null}
                     <div className="flex-1 p-6">
                       <Link href={`/articles/${article.slug}`}>
                         <h3 className="text-2xl font-bold leading-tight text-zinc-900 dark:text-zinc-50  py-4">

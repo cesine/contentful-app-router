@@ -1,0 +1,76 @@
+query GetArticles($limit: Int!, $preview: Boolean!) {
+  knowledgeArticleCollection(
+    where: { slug_exists: true }
+    order: date_DESC
+    limit: $limit
+    preview: $preview
+  ) {
+    items {
+      sys {
+        id
+      }
+      title
+      slug
+      summary
+      details {
+        json
+        links {
+          assets {
+            block {
+              sys {
+                id
+              }
+              url
+              description
+            }
+          }
+        }
+      }
+      date
+      authorName
+      categoryName
+      articleImage {
+        url
+        description
+      }
+    }
+  }
+}
+
+query GetArticle($slug: String!, $preview: Boolean!) {
+  knowledgeArticleCollection(
+    where: { slug: $slug }
+    limit: 1
+    preview: $preview
+  ) {
+    items {
+      sys {
+        id
+      }
+      title
+      slug
+      summary
+      details {
+        json
+        links {
+          assets {
+            block {
+              sys {
+                id
+              }
+              url
+              description
+            }
+          }
+        }
+      }
+      date
+      authorName
+      categoryName
+      articleImage {
+        url
+        description
+      }
+    }
+  }
+}
