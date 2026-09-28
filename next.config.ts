@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+const { CONTENTFUL_SPACE_ID } = process.env;
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -8,7 +9,7 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'images.ctfassets.net',
         port: '',
-        pathname: '/{space_id}/**',
+        pathname: `/${CONTENTFUL_SPACE_ID}/**`,
       },
     ],
   },

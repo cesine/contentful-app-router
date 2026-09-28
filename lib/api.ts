@@ -30,6 +30,7 @@ const ARTICLE_GRAPHQL_FIELDS = `
 `;
 
 async function fetchGraphQL(query, preview = false) {
+  console.log('CONTENTFUL_ACCESS_TOKEN', process.env.CONTENTFUL_ACCESS_TOKEN)
   return fetch(
     `https://graphql.contentful.com/content/v1/spaces/${process.env.CONTENTFUL_SPACE_ID}`,
     {
@@ -49,7 +50,11 @@ async function fetchGraphQL(query, preview = false) {
       // be revalidated or updated from Contentful on publish
       next: { tags: ["articles"] },
     },
-  ).then((response) => response.json());
+  ).then(async (response) => {
+    const data = await response.json();
+    console.log('data', data)
+    return data;
+});
 }
 
 function extractArticleEntries(fetchResponse) {
